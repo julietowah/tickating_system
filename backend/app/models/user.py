@@ -2,7 +2,7 @@
 
 from enum import Enum
 
-from sqlalchemy import CheckConstraint, Column, DateTime, Integer, String, func
+from sqlalchemy import Column, DateTime, Integer, String, func
 from sqlalchemy.orm import relationship, validates
 
 from app.db.base import Base
@@ -21,11 +21,6 @@ class User(Base):
     # This is the table name that will appear in SQLite.
     __tablename__ = "users"
 
-    # This database rule prevents unsupported roles from being saved.
-    __table_args__ = (
-        CheckConstraint("role IN ('user', 'admin')", name="ck_users_role_values"),
-    )
-
     # primary_key=True makes each user's ID unique.
     id = Column(Integer, primary_key=True)
 
@@ -38,7 +33,6 @@ class User(Base):
         String(320, collation="NOCASE"),
         nullable=False,
         unique=True,
-        index=True,
     )
 
     # Only a secure hash is stored. The original password is never stored.

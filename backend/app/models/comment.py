@@ -1,11 +1,9 @@
 """The database model for comments added to tickets."""
 
 from sqlalchemy import (
-    CheckConstraint,
     Column,
     DateTime,
     ForeignKey,
-    Index,
     Integer,
     Text,
     func,
@@ -19,17 +17,6 @@ class Comment(Base):
     """A message written by a user on a ticket."""
 
     __tablename__ = "comments"
-
-    __table_args__ = (
-        # trim removes spaces before checking that the comment is not empty.
-        CheckConstraint(
-            "length(trim(body)) > 0",
-            name="ck_comments_body_not_blank",
-        ),
-        # These indexes make finding comments by ticket or author faster.
-        Index("ix_comments_ticket_id", "ticket_id"),
-        Index("ix_comments_author_id", "author_id"),
-    )
 
     id = Column(Integer, primary_key=True)
 

@@ -3,11 +3,9 @@
 from enum import Enum
 
 from sqlalchemy import (
-    CheckConstraint,
     Column,
     DateTime,
     ForeignKey,
-    Index,
     Integer,
     String,
     Text,
@@ -38,30 +36,6 @@ class Ticket(Base):
     """A support request created by a user."""
 
     __tablename__ = "tickets"
-
-    # These rules protect the database even if validation is accidentally skipped.
-    __table_args__ = (
-        CheckConstraint(
-            "length(title) BETWEEN 5 AND 120",
-            name="ck_tickets_title_length",
-        ),
-        CheckConstraint(
-            "length(description) >= 20",
-            name="ck_tickets_description_length",
-        ),
-        CheckConstraint(
-            "priority IN ('low', 'medium', 'high')",
-            name="ck_tickets_priority_values",
-        ),
-        CheckConstraint(
-            "status IN ('open', 'in_progress', 'resolved')",
-            name="ck_tickets_status_values",
-        ),
-        # Indexes make common ticket searches faster.
-        Index("ix_tickets_owner_id", "owner_id"),
-        Index("ix_tickets_status", "status"),
-        Index("ix_tickets_priority", "priority"),
-    )
 
     id = Column(Integer, primary_key=True)
     title = Column(String(120), nullable=False)
