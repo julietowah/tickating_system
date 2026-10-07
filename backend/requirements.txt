@@ -1,0 +1,16 @@
+fastapi
+  uvicorn[standard]
+
+  SQLAlchemy
+  alembic
+
+  pydantic-settings
+  email-validator
+  python-dotenv
+
+  pwdlib[argon2]
+  PyJWT
+  python-multipart
+
+  pytest
+  httpx
