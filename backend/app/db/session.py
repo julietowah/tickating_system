@@ -1,21 +1,14 @@
 """Database connection and session setup for the FastAPI application."""
 
-import os
-
-from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from app.core.config import settings
 
-# Load values from the .env file into the environment.
-load_dotenv()
-
-# Use DATABASE_URL from .env, or use this SQLite database by default.
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./service_desk.db")
 
 # The engine manages connections to the database.
 engine = create_engine(
-    DATABASE_URL,
+    settings.database_url,
     connect_args={"check_same_thread": False},
 )
 
