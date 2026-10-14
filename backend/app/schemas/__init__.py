@@ -5,6 +5,7 @@ from app.schemas.comment import CommentCreate, CommentResponse
 from app.schemas.ticket import (
     TicketContentUpdate,
     TicketCreate,
+    TicketListResponse,
     TicketResponse,
     TicketStatusUpdate,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "LoginRequest",
     "TicketContentUpdate",
     "TicketCreate",
+    "TicketListResponse",
     "TicketResponse",
     "TicketStatusUpdate",
     "TokenResponse",

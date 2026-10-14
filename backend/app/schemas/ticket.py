@@ -49,3 +49,12 @@ class TicketResponse(BaseModel):
     owner_id: int
     created_at: datetime
     updated_at: datetime
+
+
+class TicketListResponse(BaseModel):
+    """One page of tickets together with pagination metadata."""
+
+    items: list[TicketResponse]
+    page: int
+    page_size: int
+    total: int
