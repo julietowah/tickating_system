@@ -360,3 +360,8 @@ Use this requirements.txt for the FastAPI project:
   - python-multipart: OAuth2 form-based login support
   - pytest: automated tests
   - httpx: FastAPI test client support
+
+
+
+  codex resume 01a12047-aebb-7f50-833a-8f1d4aad77e2
+Or run codex resume and select Review app starting point.
