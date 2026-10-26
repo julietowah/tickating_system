@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A clean service desk portal for creating and tracking support tickets."
+    />
+    <title>Deskflow — Service Desk</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div id="toast-region" class="toast-region" aria-live="polite"></div>
+
+    <section id="auth-view" class="auth-view">
+      <div class="auth-brand">
+        <div class="brand-mark" aria-hidden="true">D</div>
+        <div class="brand-copy">
+          <span class="eyebrow">Support, simplified</span>
+          <h1>Keep every request moving.</h1>
+          <p>
+            Deskflow gives your team one calm place to report issues, follow
+            progress, and keep work from slipping through the cracks.
+          </p>
+        </div>
+        <div class="brand-proof" aria-label="Product highlights">
+          <div><strong>Fast</strong><span>Clear request intake</span></div>
+          <div><strong>Private</strong><span>Role-based ticket access</span></div>
+          <div><strong>Focused</strong><span>No clutter, just progress</span></div>
+        </div>
+      </div>
+
+      <div class="auth-panel">
+        <div class="auth-card">
+          <div class="mobile-brand">
+            <div class="brand-mark" aria-hidden="true">D</div>
+            <span>Deskflow</span>
+          </div>
+
+          <div class="auth-heading">
+            <span class="eyebrow">Welcome</span>
+            <h2 id="auth-title">Sign in to your workspace</h2>
+            <p id="auth-subtitle">Use your account details to continue.</p>
+          </div>
+
+          <div class="auth-tabs" role="tablist" aria-label="Account access">
+            <button
+              class="auth-tab is-active"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              data-auth-tab="login"
+            >
+              Sign in
+            </button>
+            <button
+              class="auth-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-auth-tab="register"
+            >
+              Create account
+            </button>
+          </div>
+
+          <form id="login-form" class="auth-form" novalidate>
+            <label>
+              <span>Email address</span>
+              <input
+                id="login-email"
+                name="email"
+                type="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+                required
+              />
+            </label>
+            <label>
+              <span>Password</span>
+              <input
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="Enter your password"
+                minlength="8"
+                required
+              />
+            </label>
+            <button class="button button-primary button-full" type="submit">
+              Sign in
+            </button>
+          </form>
+
+          <form id="register-form" class="auth-form is-hidden" novalidate>
+            <label>
+              <span>Full name</span>
+              <input
+                name="full_name"
+                type="text"
+                autocomplete="name"
+                placeholder="Ada Okafor"
+                minlength="2"
+                maxlength="120"
+                required
+              />
+            </label>
+            <label>
+              <span>Email address</span>
+              <input
+                name="email"
+                type="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+                required
+              />
+            </label>
+            <label>
+              <span>Password</span>
+              <input
+                name="password"
+                type="password"
+                autocomplete="new-password"
+                placeholder="At least 8 characters"
+                minlength="8"
+                maxlength="128"
+                required
+              />
+            </label>
+            <button class="button button-primary button-full" type="submit">
+              Create account
+            </button>
+          </form>
+
+          <p class="auth-footnote">
+            By continuing, you agree to keep your account credentials secure.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <div id="app-view" class="app-shell is-hidden">
+      <aside class="sidebar">
+        <a class="sidebar-brand" href="#" aria-label="Deskflow home">
+          <span class="brand-mark brand-mark-small" aria-hidden="true">D</span>
+          <span>Deskflow</span>
+        </a>
+
+        <nav class="sidebar-nav" aria-label="Main navigation">
+          <a class="nav-item is-active" href="#tickets">
+            <span class="nav-icon" aria-hidden="true">⌁</span>
+            Tickets
+          </a>
+          <a class="nav-item" href="#account" id="account-nav">
+            <span class="nav-icon" aria-hidden="true">○</span>
+            My account
+          </a>
+        </nav>
+
+        <div class="sidebar-help">
+          <span class="help-icon" aria-hidden="true">?</span>
+          <strong>Need assistance?</strong>
+          <p>Create a ticket and include as much detail as possible.</p>
+        </div>
+
+        <button id="logout-button" class="logout-button" type="button">
+          <span aria-hidden="true">↗</span>
+          Sign out
+        </button>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <button
+            id="menu-button"
+            class="icon-button menu-button"
+            type="button"
+            aria-label="Toggle navigation"
+          >
+            ☰
+          </button>
+          <div class="topbar-context">
+            <span class="eyebrow">Service desk</span>
+            <strong>Ticket workspace</strong>
+          </div>
+          <div class="user-menu">
+            <div id="user-avatar" class="avatar" aria-hidden="true">U</div>
+            <div>
+              <strong id="user-name">User</strong>
+              <span id="user-role">Member</span>
+            </div>
+          </div>
+        </header>
+
+        <div class="content-wrap">
+          <section class="page-intro">
+            <div>
+              <span class="eyebrow">Your support hub</span>
+              <h1>Tickets</h1>
+              <p id="welcome-message">Track requests and stay on top of updates.</p>
+            </div>
+            <button id="new-ticket-button" class="button button-primary" type="button">
+              <span aria-hidden="true">＋</span>
+              New ticket
+            </button>
+          </section>
+
+          <section class="stats-grid" aria-label="Ticket summary">
+            <article class="stat-card stat-total">
+              <span class="stat-label">Total tickets</span>
+              <strong id="stat-total">—</strong>
+              <span class="stat-detail">Visible to your account</span>
+            </article>
+            <article class="stat-card stat-open">
+              <span class="stat-label">Open</span>
+              <strong id="stat-open">—</strong>
+              <span class="stat-detail">Waiting for attention</span>
+            </article>
+            <article class="stat-card stat-progress">
+              <span class="stat-label">In progress</span>
+              <strong id="stat-progress">—</strong>
+              <span class="stat-detail">Currently being handled</span>
+            </article>
+            <article class="stat-card stat-resolved">
+              <span class="stat-label">Resolved</span>
+              <strong id="stat-resolved">—</strong>
+              <span class="stat-detail">Successfully completed</span>
+            </article>
+          </section>
+
+          <section class="ticket-panel">
+            <div class="panel-header">
+              <div>
+                <h2>All tickets</h2>
+                <p id="result-summary">Loading tickets…</p>
+              </div>
+
+              <form id="filter-form" class="filters">
+                <label>
+                  <span class="sr-only">Filter by status</span>
+                  <select name="status" aria-label="Filter by status">
+                    <option value="">All statuses</option>
+                    <option value="open">Open</option>
+                    <option value="in_progress">In progress</option>
+                    <option value="resolved">Resolved</option>
+                  </select>
+                </label>
+                <label>
+                  <span class="sr-only">Filter by priority</span>
+                  <select name="priority" aria-label="Filter by priority">
+                    <option value="">All priorities</option>
+                    <option value="low">Low priority</option>
+                    <option value="medium">Medium priority</option>
+                    <option value="high">High priority</option>
+                  </select>
+                </label>
+                <button class="button button-secondary" type="submit">Apply</button>
+                <button id="clear-filters" class="text-button" type="button">Clear</button>
+              </form>
+            </div>
+
+            <div id="ticket-loading" class="loading-state">
+              <span class="spinner" aria-hidden="true"></span>
+              Loading your tickets…
+            </div>
+
+            <div id="ticket-table-wrap" class="table-wrap is-hidden">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Ticket</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th><span class="sr-only">Open</span></th>
+                  </tr>
+                </thead>
+                <tbody id="ticket-table-body"></tbody>
+              </table>
+            </div>
+
+            <div id="empty-state" class="empty-state is-hidden">
+              <div class="empty-icon" aria-hidden="true">✓</div>
+              <h3>No tickets found</h3>
+              <p>Try another filter or create your first support request.</p>
+              <button class="button button-secondary" data-open-create type="button">
+                Create a ticket
+              </button>
+            </div>
+
+            <div id="pagination" class="pagination is-hidden">
+              <span id="page-label">Page 1</span>
+              <div>
+                <button id="previous-page" class="icon-button" type="button" aria-label="Previous page">←</button>
+                <button id="next-page" class="icon-button" type="button" aria-label="Next page">→</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <dialog id="create-ticket-dialog" class="modal">
+      <form id="create-ticket-form" class="modal-card" novalidate>
+        <div class="modal-header">
+          <div>
+            <span class="eyebrow">New request</span>
+            <h2>Create a ticket</h2>
+          </div>
+          <button class="icon-button" data-close-dialog type="button" aria-label="Close">×</button>
+        </div>
+        <p class="modal-intro">
+          Tell the support team what happened and how urgently you need help.
+        </p>
+        <label>
+          <span>Title</span>
+          <input
+            name="title"
+            type="text"
+            minlength="5"
+            maxlength="120"
+            placeholder="A short summary of the issue"
+            required
+          />
+          <small>5–120 characters</small>
+        </label>
+        <label>
+          <span>Description</span>
+          <textarea
+            name="description"
+            minlength="20"
+            rows="6"
+            placeholder="Include what you expected, what happened, and any error messages."
+            required
+          ></textarea>
+          <small>At least 20 characters</small>
+        </label>
+        <label>
+          <span>Priority</span>
+          <select name="priority" required>
+            <option value="low">Low — can wait</option>
+            <option value="medium" selected>Medium — needs attention</option>
+            <option value="high">High — blocking work</option>
+          </select>
+        </label>
+        <div class="modal-actions">
+          <button class="button button-secondary" data-close-dialog type="button">Cancel</button>
+          <button class="button button-primary" type="submit">Create ticket</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="ticket-detail-dialog" class="modal">
+      <article class="modal-card detail-card">
+        <div class="modal-header">
+          <div>
+            <span id="detail-ticket-number" class="eyebrow">Ticket</span>
+            <h2 id="detail-title">Ticket details</h2>
+          </div>
+          <button class="icon-button" data-close-dialog type="button" aria-label="Close">×</button>
+        </div>
+        <div id="detail-loading" class="loading-state">
+          <span class="spinner" aria-hidden="true"></span>
+          Loading ticket…
+        </div>
+        <div id="detail-content" class="detail-content is-hidden">
+          <div class="detail-badges">
+            <span id="detail-status" class="badge"></span>
+            <span id="detail-priority" class="badge"></span>
+          </div>
+          <div class="detail-description">
+            <span class="detail-label">Description</span>
+            <p id="detail-description"></p>
+          </div>
+          <dl class="detail-meta">
+            <div><dt>Created</dt><dd id="detail-created"></dd></div>
+            <div><dt>Last updated</dt><dd id="detail-updated"></dd></div>
+            <div><dt>Owner ID</dt><dd id="detail-owner"></dd></div>
+          </dl>
+        </div>
+      </article>
+    </dialog>
+  </body>
+</html>

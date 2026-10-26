@@ -5,8 +5,10 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import pytest
+from fastapi import HTTPException
 from pydantic import ValidationError
 
+from app.dependencies.permissions import get_visible_ticket
 from app.main import app
 from app.models.ticket import TicketPriority, TicketStatus
 from app.models.user import User, UserRole
@@ -181,3 +183,95 @@ def test_get_tickets_contract_requires_auth_and_has_filters():
 
     assert operation["security"] == [{"HTTPBearer": []}]
     assert {"page", "page_size", "status", "priority"} <= parameters
+
+
+def test_owner_can_retrieve_ticket(db_session):
+    owner = make_user(db_session)
+    ticket = create_ticket(
+        db_session,
+        TicketCreate(
+            title="Owner visible ticket",
+            description="The owner should be able to retrieve this ticket.",
+        ),
+        owner,
+    )
+
+    visible_ticket = get_visible_ticket(
+        ticket_id=ticket.id,
+        current_user=owner,
+        db=db_session,
+    )
+
+    assert visible_ticket.id == ticket.id
+
+
+def test_admin_can_retrieve_another_users_ticket(db_session):
+    owner = make_named_user(
+        db_session, "Ada Okafor", "ada@example.com", UserRole.USER.value
+    )
+    admin = make_named_user(
+        db_session, "System Admin", "admin@example.com", UserRole.ADMIN.value
+    )
+    ticket = create_ticket(
+        db_session,
+        TicketCreate(
+            title="Administrator visible ticket",
+            description="An administrator should be able to retrieve this ticket.",
+        ),
+        owner,
+    )
+
+    visible_ticket = get_visible_ticket(
+        ticket_id=ticket.id,
+        current_user=admin,
+        db=db_session,
+    )
+
+    assert visible_ticket.id == ticket.id
+
+
+def test_another_user_receives_not_found(db_session):
+    owner = make_named_user(
+        db_session, "Ada Okafor", "ada@example.com", UserRole.USER.value
+    )
+    other_user = make_named_user(
+        db_session, "Ben Ali", "ben@example.com", UserRole.USER.value
+    )
+    ticket = create_ticket(
+        db_session,
+        TicketCreate(
+            title="Private owner ticket",
+            description="Another normal user must not retrieve this ticket.",
+        ),
+        owner,
+    )
+
+    with pytest.raises(HTTPException) as error:
+        get_visible_ticket(
+            ticket_id=ticket.id,
+            current_user=other_user,
+            db=db_session,
+        )
+
+    assert error.value.status_code == 404
+    assert error.value.detail == "Ticket not found"
+
+
+def test_missing_ticket_returns_not_found(db_session):
+    user = make_user(db_session)
+
+    with pytest.raises(HTTPException) as error:
+        get_visible_ticket(
+            ticket_id=999,
+            current_user=user,
+            db=db_session,
+        )
+
+    assert error.value.status_code == 404
+
+
+def test_get_ticket_contract_requires_authentication():
+    operation = app.openapi()["paths"]["/tickets/{ticket_id}"]["get"]
+
+    assert operation["security"] == [{"HTTPBearer": []}]
+    assert "200" in operation["responses"]

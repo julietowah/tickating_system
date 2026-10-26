@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Connecting a JavaScript Frontend to a FastAPI Backend</title>
+  <style>
+    @page { size: A4; margin: 16mm 15mm 18mm; }
+    * { box-sizing: border-box; }
+    html { font-family: Arial, Helvetica, sans-serif; color: #172235; background: #fff; }
+    body { margin: 0; font-size: 10.5pt; line-height: 1.55; }
+    h1, h2, h3, h4 { color: #14243a; line-height: 1.2; page-break-after: avoid; }
+    h1 { margin: 0 0 12px; font-size: 31pt; letter-spacing: -1.2px; }
+    h2 { margin: 26px 0 10px; padding-bottom: 7px; border-bottom: 2px solid #e7ebf0; font-size: 20pt; }
+    h3 { margin: 20px 0 8px; font-size: 14pt; }
+    h4 { margin: 16px 0 6px; font-size: 11.5pt; }
+    p { margin: 0 0 10px; }
+    ul, ol { margin: 7px 0 12px 22px; padding: 0; }
+    li { margin-bottom: 5px; }
+    a { color: #2864c7; }
+    code { font-family: "DejaVu Sans Mono", Consolas, monospace; font-size: 9pt; }
+    pre {
+      margin: 10px 0 14px;
+      padding: 13px 15px;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+      border: 1px solid #dce3ec;
+      border-radius: 7px;
+      color: #eaf0f8;
+      background: #17263a;
+      line-height: 1.48;
+      page-break-inside: avoid;
+    }
+    pre .comment { color: #9eb0c5; }
+    table { width: 100%; margin: 11px 0 16px; border-collapse: collapse; page-break-inside: avoid; }
+    th, td { padding: 8px 9px; border: 1px solid #dce3ec; text-align: left; vertical-align: top; }
+    th { color: #fff; background: #1e3655; font-size: 9pt; }
+    td { font-size: 9.2pt; }
+    tr:nth-child(even) td { background: #f7f9fc; }
+    .cover {
+      display: flex;
+      min-height: 255mm;
+      padding: 24mm 18mm;
+      flex-direction: column;
+      justify-content: space-between;
+      color: #fff;
+      background: linear-gradient(145deg, #14243a 0%, #203c60 72%, #31547f 100%);
+      break-after: page;
+    }
+    .cover h1 { max-width: 155mm; color: #fff; font-size: 38pt; }
+    .cover p { max-width: 145mm; color: #c5d2e3; font-size: 14pt; line-height: 1.6; }
+    .cover-label { color: #ff866b; font-size: 10pt; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; }
+    .cover-meta { display: grid; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.2); grid-template-columns: 1fr 1fr; gap: 20px; color: #b9c8da; font-size: 9.5pt; }
+    .cover-meta strong { display: block; margin-bottom: 4px; color: #fff; }
+    .logo { display: grid; width: 54px; height: 54px; margin-bottom: 38px; border-radius: 15px; place-items: center; color: #fff; background: #ef6a4c; font-size: 23px; font-weight: 800; }
+    .page-break { break-before: page; }
+    .avoid-break { page-break-inside: avoid; }
+    .lead { color: #536277; font-size: 12pt; line-height: 1.65; }
+    .callout {
+      margin: 13px 0 16px;
+      padding: 12px 14px;
+      border-left: 4px solid #3973df;
+      border-radius: 0 7px 7px 0;
+      background: #eef4ff;
+      page-break-inside: avoid;
+    }
+    .callout strong { display: block; margin-bottom: 4px; color: #2357ad; }
+    .callout.warning { border-left-color: #e48124; background: #fff5e8; }
+    .callout.warning strong { color: #a85811; }
+    .callout.success { border-left-color: #218c68; background: #eaf8f3; }
+    .callout.success strong { color: #17694e; }
+    .step {
+      margin: 18px 0;
+      padding: 15px 16px;
+      border: 1px solid #dce3ec;
+      border-radius: 10px;
+      background: #fff;
+      page-break-inside: avoid;
+    }
+    .step-number {
+      display: inline-grid;
+      width: 27px;
+      height: 27px;
+      margin-right: 7px;
+      border-radius: 50%;
+      place-items: center;
+      color: #fff;
+      background: #ef6a4c;
+      font-weight: 700;
+    }
+    .step h3 { display: inline; margin: 0; }
+    .step > p:first-of-type { margin-top: 10px; }
+    .flow {
+      display: flex;
+      margin: 16px 0;
+      align-items: stretch;
+      gap: 7px;
+      page-break-inside: avoid;
+    }
+    .flow-box {
+      display: flex;
+      min-height: 64px;
+      padding: 9px;
+      border: 1px solid #ced8e5;
+      border-radius: 8px;
+      flex: 1;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      background: #f7f9fc;
+      font-size: 8.5pt;
+    }
+    .flow-box strong { display: block; color: #193455; font-size: 9.5pt; }
+    .flow-arrow { display: grid; place-items: center; color: #ef6a4c; font-size: 17pt; font-weight: 700; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .card { padding: 12px 14px; border: 1px solid #dce3ec; border-radius: 8px; background: #fafbfd; page-break-inside: avoid; }
+    .card h3, .card h4 { margin-top: 0; }
+    .term { color: #ef6a4c; font-family: "DejaVu Sans Mono", monospace; font-weight: 700; }
+    .small { color: #667386; font-size: 8.8pt; }
+    .checklist { list-style: none; margin-left: 0; }
+    .checklist li::before { margin-right: 8px; color: #218c68; content: "✓"; font-weight: 700; }
+    .toc { margin: 18px 0; padding: 18px 20px; border: 1px solid #dce3ec; border-radius: 10px; background: #f7f9fc; }
+    .toc ol { columns: 2; column-gap: 38px; }
+    .route { color: #2357ad; font-weight: 700; white-space: nowrap; }
+    .method { display: inline-block; min-width: 42px; padding: 2px 5px; border-radius: 4px; color: #fff; background: #3973df; font-size: 8pt; font-weight: 700; text-align: center; }
+    .method.post { background: #218c68; }
+    .footer-note { margin-top: 28px; padding-top: 10px; border-top: 1px solid #dce3ec; color: #788597; font-size: 8.5pt; }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <div>
+      <div class="logo">D</div>
+      <div class="cover-label">Beginner classroom guide</div>
+      <h1>Connecting a JavaScript Frontend to a FastAPI Backend</h1>
+      <p>A step-by-step walkthrough using the Deskflow ticketing project: registration, login, JWT authentication, ticket creation, listing, filtering, pagination, and ticket details.</p>
+    </div>
+    <div class="cover-meta">
+      <div><strong>Technology</strong>HTML · CSS · JavaScript · FastAPI</div>
+      <div><strong>Learning level</strong>New backend and frontend students</div>
+      <div><strong>Frontend URL</strong>http://127.0.0.1:5500</div>
+      <div><strong>Backend URL</strong>http://127.0.0.1:8000</div>
+    </div>
+  </section>
+
+  <main>
+    <h1 style="font-size:27pt">What students will learn</h1>
+    <p class="lead">By the end of this guide, students should understand how a browser sends HTTP requests to FastAPI, how JSON moves between frontend and backend, and how a JWT token protects private endpoints.</p>
+
+    <div class="toc">
+      <strong>Guide contents</strong>
+      <ol>
+        <li>The big picture</li>
+        <li>Project structure</li>
+        <li>Starting both servers</li>
+        <li>Understanding API endpoints</li>
+        <li>Allowing browser requests with CORS</li>
+        <li>Connecting HTML to JavaScript</li>
+        <li>Creating the API helper</li>
+        <li>Registration</li>
+        <li>Login and JWT storage</li>
+        <li>Protected requests</li>
+        <li>Listing and filtering tickets</li>
+        <li>Creating and retrieving tickets</li>
+        <li>Errors and debugging</li>
+        <li>Exercises and checklist</li>
+      </ol>
+    </div>
+
+    <div class="callout success">
+      <strong>Important idea</strong>
+      HTML creates the page, CSS controls its appearance, JavaScript communicates with the API, and FastAPI handles validation, authentication, permissions, and database work.
+    </div>
+
+    <h2>1. The big picture</h2>
+    <p>The frontend and backend are two separate programs. They may run on the same computer during development, but they listen on different ports.</p>
+
+    <div class="flow">
+      <div class="flow-box"><strong>Student</strong>Clicks a button or submits a form</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><strong>JavaScript</strong>Builds an HTTP request with <code>fetch()</code></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><strong>FastAPI</strong>Validates, authenticates, and queries SQLite</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><strong>JSON response</strong>JavaScript updates the HTML page</div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <h3>Frontend</h3>
+        <p><strong>Address:</strong> <code>http://127.0.0.1:5500</code></p>
+        <p>Displays forms, buttons, tables, messages, and ticket details.</p>
+      </div>
+      <div class="card">
+        <h3>Backend API</h3>
+        <p><strong>Address:</strong> <code>http://127.0.0.1:8000</code></p>
+        <p>Receives requests and returns JSON data and HTTP status codes.</p>
+      </div>
+    </div>
+
+    <div class="callout warning">
+      <strong>Do not open index.html by double-clicking it</strong>
+      Serve the frontend through a local HTTP server. This gives it a normal origin and makes browser/API behaviour easier to understand and debug.
+    </div>
+
+    <h2>2. Project structure</h2>
+    <pre><code>tickating_system/
+├── backend/
+│   ├── app/
+│   │   ├── main.py                 <span class="comment"># FastAPI app and CORS</span>
+│   │   ├── routes/
+│   │   │   ├── auth.py             <span class="comment"># register and login</span>
+│   │   │   ├── users.py            <span class="comment"># current user</span>
+│   │   │   └── tickets.py          <span class="comment"># ticket endpoints</span>
+│   │   └── ...
+│   └── service_desk.db
+└── frontend/
+    ├── index.html                   <span class="comment"># page structure</span>
+    ├── styles.css                   <span class="comment"># visual design</span>
+    └── app.js                       <span class="comment"># API connection and behaviour</span></code></pre>
+
+    <p>The connection happens mainly in <code>frontend/app.js</code>. The HTML gives JavaScript elements to work with through IDs such as <code>login-form</code> and <code>ticket-table-body</code>.</p>
+
+    <h2>3. Start both programs</h2>
+
+    <div class="step">
+      <span class="step-number">1</span><h3>Start FastAPI</h3>
+      <pre><code>cd /home/juliet/tickating_system/backend
+source venv/bin/activate
+alembic upgrade head
+uvicorn app.main:app --reload</code></pre>
+      <p>Test it by opening <code>http://127.0.0.1:8000/docs</code>. FastAPI's Swagger page should appear.</p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">2</span><h3>Start the frontend</h3>
+      <p>Open a second terminal:</p>
+      <pre><code>cd /home/juliet/tickating_system/frontend
+python3 -m http.server 5500</code></pre>
+      <p>Open <code>http://127.0.0.1:5500</code> in the browser.</p>
+    </div>
+
+    <div class="callout">
+      <strong>Why two terminals?</strong>
+      Each server is a running program. FastAPI listens on port 8000 while the static frontend server listens on port 5500. Closing either terminal stops that part of the application.
+    </div>
+
+    <h2>4. Know the API contract</h2>
+    <p>An API contract tells the frontend which URL, method, data, authentication, and response format to use.</p>
+
+    <table>
+      <thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th><th>JWT required?</th></tr></thead>
+      <tbody>
+        <tr><td><span class="method post">POST</span></td><td class="route">/auth/register</td><td>Create a normal user</td><td>No</td></tr>
+        <tr><td><span class="method post">POST</span></td><td class="route">/auth/login</td><td>Receive an access token</td><td>No</td></tr>
+        <tr><td><span class="method">GET</span></td><td class="route">/users/me</td><td>Load the signed-in user's profile</td><td>Yes</td></tr>
+        <tr><td><span class="method post">POST</span></td><td class="route">/tickets</td><td>Create a ticket</td><td>Yes</td></tr>
+        <tr><td><span class="method">GET</span></td><td class="route">/tickets</td><td>List, filter, and paginate tickets</td><td>Yes</td></tr>
+        <tr><td><span class="method">GET</span></td><td class="route">/tickets/{ticket_id}</td><td>Retrieve one visible ticket</td><td>Yes</td></tr>
+      </tbody>
+    </table>
+
+    <p>For example, registration expects this JSON body:</p>
+    <pre><code>{
+  "full_name": "Ada Okafor",
+  "email": "ada@example.com",
+  "password": "SecurePass123!"
+}</code></pre>
+
+    <p>Login returns:</p>
+    <pre><code>{
+  "access_token": "eyJhbGciOiJIUzI1NiIs...",
+  "token_type": "bearer"
+}</code></pre>
+
+    <div class="page-break"></div>
+    <h2>5. Allow the frontend through CORS</h2>
+    <p><strong>CORS</strong> means Cross-Origin Resource Sharing. The browser considers ports 5500 and 8000 to be different origins. Without permission from the backend, the browser blocks frontend requests.</p>
+
+    <p>In <code>backend/app/main.py</code>:</p>
+    <pre><code>from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+    ],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)</code></pre>
+
+    <table>
+      <thead><tr><th>Setting</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>allow_origins</code></td><td>Only these frontend addresses may call the API from a browser.</td></tr>
+        <tr><td><code>allow_methods=["*"]</code></td><td>Allow GET, POST, PATCH, DELETE, OPTIONS, and other HTTP methods.</td></tr>
+        <tr><td><code>allow_headers=["*"]</code></td><td>Allow headers such as Content-Type and Authorization.</td></tr>
+        <tr><td><code>allow_credentials=False</code></td><td>This app uses a bearer header, not browser cookies.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warning">
+      <strong>CORS is enforced by browsers</strong>
+      Postman or curl may work even when the browser reports a CORS error. Always test the real frontend in a browser.
+    </div>
+
+    <h2>6. Connect HTML elements to JavaScript</h2>
+    <p>The login form has an ID:</p>
+    <pre><code>&lt;form id="login-form" class="auth-form" novalidate&gt;
+  &lt;input name="email" type="email" required /&gt;
+  &lt;input name="password" type="password" required /&gt;
+  &lt;button type="submit"&gt;Sign in&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+
+    <p>JavaScript finds that form:</p>
+    <pre><code>const elements = {
+  loginForm: document.querySelector("#login-form"),
+  registerForm: document.querySelector("#register-form"),
+  ticketTableBody: document.querySelector("#ticket-table-body"),
+};</code></pre>
+
+    <p>Then it listens for submission:</p>
+    <pre><code>elements.loginForm.addEventListener("submit", handleLogin);</code></pre>
+
+    <div class="flow">
+      <div class="flow-box"><strong>HTML</strong><code>id="login-form"</code></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><strong>JavaScript</strong><code>querySelector()</code></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><strong>Event</strong><code>submit</code></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><strong>Function</strong><code>handleLogin()</code></div>
+    </div>
+
+    <h2>7. Create one reusable API helper</h2>
+    <p>Instead of repeating <code>fetch()</code>, headers, token handling, JSON parsing, and errors in every function, the frontend uses one helper called <code>apiFetch</code>.</p>
+
+    <h3>7.1 Store the backend address</h3>
+    <pre><code>const API_BASE_URL = "http://127.0.0.1:8000";</code></pre>
+    <p>A request to <code>/auth/login</code> becomes <code>http://127.0.0.1:8000/auth/login</code>.</p>
+
+    <h3>7.2 Build the headers</h3>
+    <pre><code>const headers = new Headers(options.headers || {});
+
+if (options.body &amp;&amp; !headers.has("Content-Type")) {
+  headers.set("Content-Type", "application/json");
+}
+
+if (state.token) {
+  headers.set("Authorization", `Bearer ${state.token}`);
+}</code></pre>
+
+    <ul>
+      <li><code>Content-Type: application/json</code> tells FastAPI that the body contains JSON.</li>
+      <li><code>Authorization: Bearer ...</code> proves which user is making a protected request.</li>
+      <li>The token header is added automatically whenever a token exists.</li>
+    </ul>
+
+    <h3>7.3 Send the request</h3>
+    <pre><code>response = await fetch(`${API_BASE_URL}${path}`, {
+  ...options,
+  headers,
+});</code></pre>
+
+    <p><code>await</code> pauses this async function until the server answers. It does not freeze the whole browser.</p>
+
+    <h3>7.4 Read JSON and check the result</h3>
+    <pre><code>const payload = contentType.includes("application/json")
+  ? await response.json()
+  : null;
+
+if (!response.ok) {
+  throw new ApiError(getApiMessage(payload, response.status), response.status);
+}
+
+return payload;</code></pre>
+
+    <div class="callout">
+      <strong>fetch does not reject every failed HTTP request</strong>
+      A 401, 404, or 422 still produces a Response object. That is why the code must check <code>response.ok</code>.
+    </div>
+
+    <div class="page-break"></div>
+    <h2>8. Connect registration</h2>
+
+    <div class="step">
+      <span class="step-number">1</span><h3>Stop the browser's default form submission</h3>
+      <pre><code>event.preventDefault();</code></pre>
+      <p>Without this, the browser reloads the page and JavaScript loses control of the request.</p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">2</span><h3>Read input values</h3>
+      <pre><code>const formData = new FormData(form);
+
+const registration = {
+  full_name: formData.get("full_name").trim(),
+  email: formData.get("email").trim(),
+  password: formData.get("password"),
+};</code></pre>
+      <p>The names must match both the HTML input names and the FastAPI schema fields.</p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">3</span><h3>Send POST /auth/register</h3>
+      <pre><code>await apiFetch("/auth/register", {
+  method: "POST",
+  body: JSON.stringify(registration),
+});</code></pre>
+      <p><code>JSON.stringify()</code> converts a JavaScript object into JSON text for the request body.</p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">4</span><h3>Update the screen</h3>
+      <pre><code>form.reset();
+elements.loginEmail.value = registration.email;
+switchAuthTab("login");
+showToast("Account created. You can sign in now.");</code></pre>
+      <p>The frontend does not automatically log in because the registration endpoint returns a user, not a token.</p>
+    </div>
+
+    <h2>9. Connect login and save the JWT</h2>
+
+    <h3>9.1 Send the credentials</h3>
+    <pre><code>const response = await apiFetch("/auth/login", {
+  method: "POST",
+  body: JSON.stringify({
+    email: formData.get("email").trim(),
+    password: formData.get("password"),
+  }),
+});</code></pre>
+
+    <h3>9.2 Save the returned token</h3>
+    <pre><code>state.token = response.access_token;
+localStorage.setItem("deskflow_access_token", state.token);</code></pre>
+
+    <div class="two-col">
+      <div class="card">
+        <h4><code>state.token</code></h4>
+        <p>Keeps the token available while the current page is open.</p>
+      </div>
+      <div class="card">
+        <h4><code>localStorage</code></h4>
+        <p>Keeps the token after a refresh or browser restart.</p>
+      </div>
+    </div>
+
+    <div class="callout warning">
+      <strong>Teaching note about token storage</strong>
+      localStorage is simple for this learning project, but production applications must carefully protect against cross-site scripting. Secure cookie-based designs are also common.
+    </div>
+
+    <h3>9.3 Load the signed-in user</h3>
+    <pre><code>state.user = await apiFetch("/users/me");</code></pre>
+
+    <p>The API helper automatically adds:</p>
+    <pre><code>Authorization: Bearer eyJhbGciOiJIUzI1NiIs...</code></pre>
+
+    <p>FastAPI decodes the JWT, reads the user ID, loads that user from the database, and returns the safe profile.</p>
+
+    <h3>9.4 Logout</h3>
+    <pre><code>state.token = null;
+state.user = null;
+localStorage.removeItem("deskflow_access_token");</code></pre>
+    <p>JWT logout on this frontend means deleting the locally stored token. After that, protected requests no longer contain an Authorization header.</p>
+
+    <h2>10. List, filter, and paginate tickets</h2>
+
+    <h3>10.1 Build query parameters safely</h3>
+    <pre><code>const query = new URLSearchParams({
+  page: String(state.page),
+  page_size: String(state.pageSize),
+});
+
+if (state.status) query.set("status", state.status);
+if (state.priority) query.set("priority", state.priority);</code></pre>
+
+    <p>If the user selects open and high priority, the request URL becomes:</p>
+    <pre><code>GET /tickets?page=1&amp;page_size=8&amp;status=open&amp;priority=high</code></pre>
+
+    <h3>10.2 Request the page</h3>
+    <pre><code>const ticketPage = await apiFetch(`/tickets?${query}`);</code></pre>
+
+    <p>The backend returns:</p>
+    <pre><code>{
+  "items": [
+    {
+      "id": 4,
+      "title": "Cannot access student portal",
+      "priority": "high",
+      "status": "open",
+      "owner_id": 1,
+      "created_at": "2026-10-26T09:10:00"
+    }
+  ],
+  "page": 1,
+  "page_size": 8,
+  "total": 1
+}</code></pre>
+
+    <h3>10.3 Render tickets into the table</h3>
+    <pre><code>elements.ticketTableBody.innerHTML = items
+  .map(ticketRowTemplate)
+  .join("");</code></pre>
+
+    <p><code>map()</code> turns every ticket object into an HTML row. <code>join("")</code> combines those rows into one string.</p>
+
+    <h3>10.4 Calculate pages</h3>
+    <pre><code>const totalPages = Math.max(1, Math.ceil(total / pageSize));</code></pre>
+
+    <p>If there are 21 tickets and each page shows 8:</p>
+    <pre><code>Math.ceil(21 / 8) === 3</code></pre>
+
+    <p>The Previous and Next buttons change <code>state.page</code> and call <code>loadDashboard()</code> again.</p>
+
+    <div class="page-break"></div>
+    <h2>11. Create a ticket</h2>
+    <p>The create-ticket form collects title, description, and priority. It deliberately does not send <code>owner_id</code> or <code>status</code>.</p>
+
+    <pre><code>const ticket = await apiFetch("/tickets", {
+  method: "POST",
+  body: JSON.stringify({
+    title: formData.get("title").trim(),
+    description: formData.get("description").trim(),
+    priority: formData.get("priority"),
+  }),
+});</code></pre>
+
+    <div class="callout success">
+      <strong>Why this is secure</strong>
+      FastAPI obtains the owner from the JWT and automatically starts the ticket as open. A user cannot pretend to be another owner or submit a fake resolved ticket.
+    </div>
+
+    <p>After success, the frontend:</p>
+    <ol>
+      <li>Clears the form.</li>
+      <li>Closes the dialog.</li>
+      <li>Returns to page 1.</li>
+      <li>Reloads the dashboard.</li>
+      <li>Shows the new ticket number.</li>
+    </ol>
+
+    <h2>12. Retrieve one ticket</h2>
+    <p>Each table row has a button containing the ticket ID:</p>
+    <pre><code>&lt;button data-ticket-id="4"&gt;Open&lt;/button&gt;</code></pre>
+
+    <p>JavaScript reads that value and requests:</p>
+    <pre><code>const ticket = await apiFetch(`/tickets/${ticketId}`);</code></pre>
+
+    <p>It then safely places data into the detail dialog:</p>
+    <pre><code>elements.detailTitle.textContent = ticket.title;
+elements.detailDescription.textContent = ticket.description;
+elements.detailOwner.textContent = `#${ticket.owner_id}`;</code></pre>
+
+    <div class="callout">
+      <strong>Prefer textContent for user data</strong>
+      <code>textContent</code> displays text without interpreting it as HTML. This helps prevent script injection. The ticket table uses an escaping helper before inserting strings with <code>innerHTML</code>.
+    </div>
+
+    <h2>13. Error handling</h2>
+    <p>Possible API errors include:</p>
+
+    <table>
+      <thead><tr><th>Status</th><th>Meaning</th><th>Frontend response</th></tr></thead>
+      <tbody>
+        <tr><td>401</td><td>Missing, expired, or invalid token</td><td>Remove token and return to login</td></tr>
+        <tr><td>404</td><td>Ticket missing or hidden</td><td>Show “Ticket not found”</td></tr>
+        <tr><td>409</td><td>Email already registered</td><td>Show duplicate-account message</td></tr>
+        <tr><td>422</td><td>Input failed validation</td><td>Show field validation messages</td></tr>
+        <tr><td>0</td><td>Browser could not reach API</td><td>Tell user to start/check FastAPI</td></tr>
+      </tbody>
+    </table>
+
+    <p>The helper extracts FastAPI validation errors:</p>
+    <pre><code>if (Array.isArray(payload?.detail)) {
+  return payload.detail
+    .map((issue) =&gt; `${issue.loc?.at(-1)}: ${issue.msg}`)
+    .join(". ");
+}</code></pre>
+
+    <p>Functions use <code>try / catch / finally</code>:</p>
+    <pre><code>try {
+  const response = await apiFetch(...);
+  <span class="comment">// handle success</span>
+} catch (error) {
+  showToast(error.message, "error");
+} finally {
+  setButtonBusy(submitButton, false);
+}</code></pre>
+
+    <ul>
+      <li><code>try</code>: code that may fail.</li>
+      <li><code>catch</code>: show a helpful error.</li>
+      <li><code>finally</code>: restore the button whether the request succeeds or fails.</li>
+    </ul>
+
+    <h2>14. Debug requests in the browser</h2>
+    <ol>
+      <li>Open the frontend in Chrome.</li>
+      <li>Press <strong>F12</strong> or right-click and choose <strong>Inspect</strong>.</li>
+      <li>Select the <strong>Network</strong> tab.</li>
+      <li>Submit the login form.</li>
+      <li>Click the <code>login</code> network request.</li>
+      <li>Inspect Headers, Payload, Response, and Status.</li>
+    </ol>
+
+    <table>
+      <thead><tr><th>Check</th><th>Expected value</th></tr></thead>
+      <tbody>
+        <tr><td>Request URL</td><td><code>http://127.0.0.1:8000/auth/login</code></td></tr>
+        <tr><td>Request method</td><td><code>POST</code></td></tr>
+        <tr><td>Content-Type</td><td><code>application/json</code></td></tr>
+        <tr><td>Request payload</td><td>Email and password JSON</td></tr>
+        <tr><td>Status</td><td><code>200 OK</code> for successful login</td></tr>
+        <tr><td>Response</td><td><code>access_token</code> and <code>token_type</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2>15. Common problems</h2>
+
+    <div class="step">
+      <h3>“Could not reach the API”</h3>
+      <ul>
+        <li>Confirm Uvicorn is still running.</li>
+        <li>Open <code>http://127.0.0.1:8000/docs</code>.</li>
+        <li>Confirm <code>API_BASE_URL</code> uses port 8000.</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <h3>CORS error in the browser console</h3>
+      <ul>
+        <li>Serve the frontend on port 5500 or 8080.</li>
+        <li>Make sure the exact frontend origin is in <code>allow_origins</code>.</li>
+        <li>Restart Uvicorn after changing CORS settings.</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <h3>401 Unauthorized</h3>
+      <ul>
+        <li>Log in again and inspect localStorage.</li>
+        <li>Check for <code>Authorization: Bearer ...</code> in Network → Headers.</li>
+        <li>Confirm the backend secret key did not change after issuing the token.</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <h3>422 Unprocessable Entity</h3>
+      <ul>
+        <li>Compare JSON keys with the Pydantic schema.</li>
+        <li>Check title and description minimum lengths.</li>
+        <li>Use only <code>low</code>, <code>medium</code>, or <code>high</code> priority.</li>
+      </ul>
+    </div>
+
+    <div class="page-break"></div>
+    <h2>16. Full connection checklist</h2>
+    <ul class="checklist">
+      <li>FastAPI starts on port 8000.</li>
+      <li>The frontend starts on port 5500.</li>
+      <li>CORS includes the frontend origin.</li>
+      <li>The JavaScript API base URL points to port 8000.</li>
+      <li>HTML input names match Pydantic field names.</li>
+      <li>POST requests use <code>JSON.stringify()</code>.</li>
+      <li>JSON requests include <code>Content-Type: application/json</code>.</li>
+      <li>Login stores the returned access token.</li>
+      <li>Protected requests include the bearer token.</li>
+      <li>Responses are checked with <code>response.ok</code>.</li>
+      <li>Errors are caught and displayed to the user.</li>
+      <li>Ticket data is rendered safely into the page.</li>
+      <li>Logout removes the stored token.</li>
+    </ul>
+
+    <h2>17. Vocabulary for beginners</h2>
+    <table>
+      <thead><tr><th>Word</th><th>Simple meaning</th></tr></thead>
+      <tbody>
+        <tr><td class="term">API</td><td>A defined way for programs to communicate.</td></tr>
+        <tr><td class="term">Endpoint</td><td>A method and URL that performs one API operation.</td></tr>
+        <tr><td class="term">Request</td><td>Information sent from the frontend to the backend.</td></tr>
+        <tr><td class="term">Response</td><td>The backend's answer, including data and a status code.</td></tr>
+        <tr><td class="term">JSON</td><td>A text format used to exchange structured data.</td></tr>
+        <tr><td class="term">HTTP method</td><td>The operation type, such as GET, POST, PATCH, or DELETE.</td></tr>
+        <tr><td class="term">Header</td><td>Extra request information, such as content type or authentication.</td></tr>
+        <tr><td class="term">JWT</td><td>A signed token used to identify an authenticated user.</td></tr>
+        <tr><td class="term">Bearer token</td><td>A token sent in the Authorization header.</td></tr>
+        <tr><td class="term">CORS</td><td>Browser rules controlling communication between different origins.</td></tr>
+        <tr><td class="term">async / await</td><td>JavaScript syntax for waiting for asynchronous work such as network requests.</td></tr>
+        <tr><td class="term">DOM</td><td>The browser's JavaScript representation of the HTML page.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>18. Student exercises</h2>
+    <ol>
+      <li>Use the Network tab to find the login request and identify its method, URL, request JSON, status, and response JSON.</li>
+      <li>Remove the saved token in Application → Local Storage. Refresh the page and explain what happens.</li>
+      <li>Change <code>pageSize</code> from 8 to 3 and observe pagination.</li>
+      <li>Submit a ticket title shorter than five characters and study the validation result.</li>
+      <li>Temporarily change the API port to 9999. Explain the displayed error, then restore port 8000.</li>
+      <li>Add a “high priority” count by calling <code>/tickets?page=1&amp;page_size=1&amp;priority=high</code>.</li>
+      <li>When the backend edit endpoint is ready, design a PATCH request using the same <code>apiFetch</code> helper.</li>
+    </ol>
+
+    <h2>19. Final mental model</h2>
+    <div class="flow">
+      <div class="flow-box"><strong>1. Listen</strong>JavaScript catches a browser event</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><strong>2. Collect</strong>Read and validate form values</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><strong>3. Request</strong>Send method, URL, headers, and JSON</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><strong>4. Render</strong>Handle JSON or show an error</div>
+    </div>
+
+    <div class="callout success">
+      <strong>If students remember only one pattern</strong>
+      Event → collect data → call <code>apiFetch</code> → await response → update the DOM → catch errors.
+    </div>
+
+    <p class="footer-note">Prepared from the actual Deskflow service desk implementation. The examples match <code>frontend/app.js</code> and the FastAPI routes in <code>backend/app/routes</code>.</p>
+  </main>
+</body>
+</html>

@@ -365,3 +365,76 @@ Use this requirements.txt for the FastAPI project:
 
   codex resume 01a12047-aebb-7f50-833a-8f1d4aad77e2
 Or run codex resume and select Review app starting point.
+
+
+
+
+
+## Step-by-step status
+
+| Step | Status | Remaining work |
+|---|---|---|
+| 1. Stack | Partial | Pin dependency versions in requirements.txt (requirements.txt:1). |
+| 2. Structure | Partial | Add core/exceptions.py, scripts/create_admin.py, and README.md. |
+| 3. Configuration | Complete | Configuration and .env.example exist. |
+| 4. Models/migrations | Mostly complete | Models and initial migration exist. Consider database-level checks for role, priority, and status. |
+| 5. Schemas | Complete | Create, update, status, comment, and response schemas exist. |
+| 6. Authentication | Complete | Registration, login, JWT authentication, and /users/me exist. |
+| 7. Authorization | Partial | get_current_user and get_visible_ticket exist. require_admin and the remaining operation-specific rules are missing. |
+| 8. Ticket endpoints | Partial | Three of eight endpoints are implemented. |
+| 9. HTTP responses | Partial | Individual status codes exist, but the consistent error structure and exception handlers are missing. |
+| 10. Health | Not started | Add unauthenticated GET /health. |
+| 11. Admin creation | Not started | Add idempotent python -m scripts.create_admin. |
+| 12. Tests | Partial | Twelve tests pass, but important authentication, update, status, comment, delete, and HTTP-level cases are missing. |
+| 13. README | Not started | Create the complete setup and usage guide. |
+| 14. Final verification | Not started | Perform migration, startup, security, documentation, and clean-clone checks. |
+
+## Remaining ticket endpoints
+
+The implemented endpoints in tickets.py (app/routes/tickets.py:20) are:
+
+- POST /tickets
+- GET /tickets
+- GET /tickets/{ticket_id}
+
+The remaining five are:
+
+1. PATCH /tickets/{ticket_id} — edit ticket content
+2. PATCH /tickets/{ticket_id}/status — admin-only status change
+3. DELETE /tickets/{ticket_id} — admin-only deletion
+4. POST /tickets/{ticket_id}/comments — add comment
+5. GET /tickets/{ticket_id}/comments — list comments
+
+## Recommended implementation order
+
+1. Edit ticket content
+   - Owner can edit only while unresolved.
+   - Administrator can edit any ticket.
+   - Only title, description, and priority may change.
+2. Add require_admin
+   - Reusable dependency for status changes and deletion.
+3. Change ticket status
+   - Administrator only.
+4. Delete ticket
+   - Administrator only.
+   - Return 204 No Content.
+5. Comment endpoints
+   - Owners can comment on their tickets.
+   - Administrators can comment on any ticket.
+   - Reject blank comments.
+6. Normalize errors
+   - Add predictable error response objects and validation handlers.
+7. Add /health
+8. Add the administrator creation script
+9. Complete automated tests
+   - Authentication success/failure
+   - Duplicate registration
+   - Actual unauthorized HTTP requests
+   - Editing unresolved/resolved tickets
+   - Status authorization
+   - Deletion
+   - Comments
+10. Pin dependencies and write the README
+11. Perform final clean-run verification
+
+The immediate next task remains Edit ticket content, which was requested but has not yet been implemented.

@@ -5,8 +5,9 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.dependencies.auth import get_current_user
+from app.dependencies.permissions import get_visible_ticket
+from app.models.ticket import Ticket, TicketPriority, TicketStatus
 from app.models.user import User
-from app.models.ticket import TicketPriority, TicketStatus
 from app.schemas.ticket import TicketCreate, TicketListResponse, TicketResponse
 from app.services.tickets import (
     create_ticket as create_ticket_service,
@@ -58,3 +59,10 @@ def list_tickets(
         page_size=page_size,
         total=total,
     )
+
+
+@router.get("/{ticket_id}", response_model=TicketResponse)
+def retrieve_ticket(ticket: Ticket = Depends(get_visible_ticket)):
+    """Return one ticket visible to the authenticated user."""
+
+    return ticket

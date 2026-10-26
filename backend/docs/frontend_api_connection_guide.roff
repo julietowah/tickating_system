@@ -1,0 +1,746 @@
+.\" Beginner guide source for GNU troff.
+.po 0.7i
+.ll 6.85i
+.lt 6.85i
+.ps 10
+.vs 13
+.hy 0
+.de H1
+.br
+.sp 1.3v
+.ne 4
+.ft B
+.ps 18
+\\$*
+.ps 10
+.ft R
+.sp 0.7v
+..
+.de H2
+.br
+.sp 1v
+.ne 3
+.ft B
+.ps 13
+\\$*
+.ps 10
+.ft R
+.sp 0.4v
+..
+.de P
+.br
+.sp 0.5v
+.fi
+..
+.de BUL
+.br
+.sp 0.2v
+.ti -0.18i
+\(bu\h'0.10i'\\$*
+..
+.de NOTE
+.br
+.sp 0.7v
+.in +0.25i
+.ft B
+NOTE: \\$*
+.ft R
+.in -0.25i
+.sp 0.5v
+..
+.de WARN
+.br
+.sp 0.7v
+.in +0.25i
+.ft B
+IMPORTANT: \\$*
+.ft R
+.in -0.25i
+.sp 0.5v
+..
+.de CS
+.br
+.sp 0.6v
+.nf
+.ft C
+.ps 8
+.vs 10
+.in +0.22i
+..
+.de CE
+.br
+.in -0.22i
+.ft R
+.ps 10
+.vs 13
+.fi
+.sp 0.6v
+..
+.de FOOTER
+.ev footer
+.ps 8
+.ft I
+.tl 'Deskflow: Frontend and FastAPI Guide''Page \\n%'
+.ft R
+.ev
+..
+.wh -0.38i FOOTER
+
+.sp 7v
+.ce 1
+.ft B
+.ps 12
+BEGINNER CLASSROOM GUIDE
+.sp 2v
+.ce 1
+.ps 27
+.vs 32
+Connecting a JavaScript Frontend
+.ce 1
+to a FastAPI Backend
+.sp 3v
+.ce 1
+.ft R
+.ps 14
+.vs 18
+A step-by-step guide using the Deskflow ticketing project
+.sp 7v
+.ce 1
+.ps 11
+.vs 14
+HTML | CSS | JavaScript | FastAPI | JWT | SQLite
+.sp 6v
+.ce 1
+.ps 10
+Frontend: http://127.0.0.1:5500
+.ce 1
+Backend:  http://127.0.0.1:8000
+.bp
+.ps 10
+.vs 13
+.ft R
+
+.H1 What students will learn
+.P
+By the end of this guide, students should understand how a browser sends HTTP requests to FastAPI, how JSON moves between the frontend and backend, and how a JWT token protects private endpoints.
+.P
+Students will be able to:
+.BUL Explain the roles of HTML, CSS, JavaScript, and FastAPI.
+.BUL Start the frontend and backend as two separate programs.
+.BUL Read an API contract before writing frontend code.
+.BUL Send GET and POST requests with fetch().
+.BUL Convert JavaScript objects to JSON.
+.BUL Store a login token and send it in an Authorization header.
+.BUL Render API responses into an HTML page.
+.BUL Investigate failures with browser developer tools.
+
+.NOTE The most important pattern is: browser event -> collect data -> call the API -> await the response -> update the page -> handle errors.
+
+.H1 1. The big picture
+.P
+The frontend and backend are two separate programs. During development they run on the same computer, but they listen on different ports.
+.CS
+STUDENT
+   |
+   | clicks a button or submits a form
+   v
+HTML PAGE + JAVASCRIPT       http://127.0.0.1:5500
+   |
+   | HTTP request: URL, method, headers, JSON
+   v
+FASTAPI                     http://127.0.0.1:8000
+   |
+   | validation, authentication, permissions, database
+   v
+JSON RESPONSE
+   |
+   | JavaScript reads the response
+   v
+THE PAGE IS UPDATED
+.CE
+
+.H2 What each technology does
+.BUL HTML creates forms, buttons, tables, dialogs, headings, and page structure.
+.BUL CSS controls colours, spacing, responsive layout, and visual states.
+.BUL JavaScript listens for user actions and communicates with the API.
+.BUL FastAPI validates data, identifies users, enforces permissions, and accesses SQLite.
+.BUL JSON is the text format used to exchange structured data.
+.BUL HTTP status codes tell the frontend whether a request succeeded or failed.
+
+.WARN Do not open index.html by double-clicking it. Serve the frontend with a local HTTP server. This gives it a normal origin and makes API behaviour easier to debug.
+
+.H1 2. Project structure
+.CS
+tickating_system/
+|-- backend/
+|   |-- app/
+|   |   |-- main.py              # FastAPI app and CORS
+|   |   |-- routes/
+|   |   |   |-- auth.py          # register and login
+|   |   |   |-- users.py         # current user
+|   |   |   `-- tickets.py       # ticket endpoints
+|   |   `-- ...
+|   `-- service_desk.db
+`-- frontend/
+    |-- index.html                # page structure
+    |-- styles.css                # visual design
+    `-- app.js                    # API connection and behaviour
+.CE
+.P
+Most of the connection code is in frontend/app.js. The HTML gives JavaScript elements to work with through IDs such as login-form and ticket-table-body.
+
+.H1 3. Start both programs
+.H2 Step 1 - Start FastAPI
+.P
+Open the first terminal and run:
+.CS
+cd /home/juliet/tickating_system/backend
+source venv/bin/activate
+alembic upgrade head
+uvicorn app.main:app --reload
+.CE
+.P
+Test the backend by opening http://127.0.0.1:8000/docs. FastAPI's interactive Swagger page should appear.
+
+.H2 Step 2 - Start the frontend
+.P
+Open a second terminal and run:
+.CS
+cd /home/juliet/tickating_system/frontend
+python3 -m http.server 5500
+.CE
+.P
+Open http://127.0.0.1:5500 in the browser.
+.NOTE Two terminals are required because each server is a running program. Closing a terminal stops that server.
+
+.bp
+.H1 4. Understand the API contract
+.P
+An API contract tells the frontend which URL, HTTP method, request data, authentication, response data, and status codes to use.
+.P
+The current Deskflow endpoints are:
+.CS
+POST  /auth/register          Create a normal user       Public
+POST  /auth/login             Return a JWT token         Public
+GET   /users/me               Return current user        JWT required
+POST  /tickets                Create a ticket            JWT required
+GET   /tickets                List/filter tickets        JWT required
+GET   /tickets/{ticket_id}    Retrieve one ticket        JWT required
+.CE
+
+.H2 Registration request
+.CS
+POST /auth/register
+Content-Type: application/json
+
+{
+  "full_name": "Ada Okafor",
+  "email": "ada@example.com",
+  "password": "SecurePass123!"
+}
+.CE
+
+.H2 Login response
+.CS
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIs...",
+  "token_type": "bearer"
+}
+.CE
+.P
+The frontend must use the exact field names expected by FastAPI. For example, sending name instead of full_name produces a validation error.
+
+.H1 5. Allow browser requests with CORS
+.P
+CORS means Cross-Origin Resource Sharing. The browser treats ports 5500 and 8000 as different origins. Without permission from FastAPI, the browser blocks the frontend request.
+.P
+The following code is in backend/app/main.py:
+.CS
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+    ],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+.CE
+.BUL allow_origins lists browser addresses permitted to call the API.
+.BUL allow_methods permits methods such as GET, POST, PATCH, DELETE, and OPTIONS.
+.BUL allow_headers permits Content-Type and Authorization headers.
+.BUL allow_credentials is false because this learning app sends a bearer header rather than a cookie.
+.WARN CORS is enforced by browsers. A request may work in Postman or curl while the browser still reports a CORS error.
+
+.H1 6. Connect HTML elements to JavaScript
+.P
+The login form has an ID and its inputs have names:
+.CS
+<form id="login-form" novalidate>
+  <input name="email" type="email" required />
+  <input name="password" type="password" required />
+  <button type="submit">Sign in</button>
+</form>
+.CE
+.P
+JavaScript finds the form:
+.CS
+const elements = {
+  loginForm: document.querySelector("#login-form"),
+  registerForm: document.querySelector("#register-form"),
+  ticketTableBody: document.querySelector("#ticket-table-body"),
+};
+.CE
+.P
+Then JavaScript listens for submission:
+.CS
+elements.loginForm.addEventListener("submit", handleLogin);
+.CE
+.CS
+HTML id="login-form"
+        -> querySelector()
+        -> submit event
+        -> handleLogin()
+.CE
+
+.bp
+.H1 7. Build one reusable API helper
+.P
+Without a helper, every feature would repeat fetch(), headers, token handling, JSON parsing, and errors. The frontend puts that shared work in apiFetch().
+
+.H2 7.1 Store the backend address
+.CS
+const API_BASE_URL = "http://127.0.0.1:8000";
+.CE
+.P
+Calling apiFetch("/auth/login") creates the complete URL http://127.0.0.1:8000/auth/login.
+
+.H2 7.2 Build the headers
+.CS
+const headers = new Headers(options.headers || {});
+
+if (options.body && !headers.has("Content-Type")) {
+  headers.set("Content-Type", "application/json");
+}
+
+if (state.token) {
+  headers.set("Authorization", `Bearer ${state.token}`);
+}
+.CE
+.BUL Content-Type tells FastAPI that the request body is JSON.
+.BUL Authorization identifies the signed-in user on protected endpoints.
+.BUL The helper adds the JWT automatically whenever one exists.
+
+.H2 7.3 Send the request
+.CS
+response = await fetch(`${API_BASE_URL}${path}`, {
+  ...options,
+  headers,
+});
+.CE
+.P
+await pauses this async function until the server answers. It does not freeze the whole browser.
+
+.H2 7.4 Read JSON and detect errors
+.CS
+const payload = contentType.includes("application/json")
+  ? await response.json()
+  : null;
+
+if (!response.ok) {
+  throw new ApiError(
+    getApiMessage(payload, response.status),
+    response.status,
+  );
+}
+
+return payload;
+.CE
+.WARN fetch() does not reject 401, 404, or 422 responses automatically. The code must check response.ok.
+
+.H2 Complete request pattern
+.CS
+try {
+  const data = await apiFetch("/some-endpoint", options);
+  // use successful data
+} catch (error) {
+  showToast(error.message, "error");
+}
+.CE
+
+.H1 8. Connect registration
+.H2 Step 1 - Stop normal form submission
+.CS
+event.preventDefault();
+.CE
+.P
+Without this line the browser reloads the page, and JavaScript loses control of the request.
+
+.H2 Step 2 - Check browser validation
+.CS
+if (!form.checkValidity()) {
+  form.reportValidity();
+  return;
+}
+.CE
+
+.H2 Step 3 - Read the form values
+.CS
+const formData = new FormData(form);
+
+const registration = {
+  full_name: formData.get("full_name").trim(),
+  email: formData.get("email").trim(),
+  password: formData.get("password"),
+};
+.CE
+.P
+The names must match the HTML input names and the Pydantic schema fields.
+
+.H2 Step 4 - Send POST /auth/register
+.CS
+await apiFetch("/auth/register", {
+  method: "POST",
+  body: JSON.stringify(registration),
+});
+.CE
+.P
+JSON.stringify() converts a JavaScript object into JSON text for the request body.
+
+.H2 Step 5 - Update the interface
+.CS
+form.reset();
+elements.loginEmail.value = registration.email;
+switchAuthTab("login");
+showToast("Account created. You can sign in now.");
+.CE
+.P
+Registration does not log the user in because this endpoint returns a user profile rather than a JWT.
+
+.bp
+.H1 9. Connect login and JWT authentication
+.H2 Step 1 - Send credentials
+.CS
+const response = await apiFetch("/auth/login", {
+  method: "POST",
+  body: JSON.stringify({
+    email: formData.get("email").trim(),
+    password: formData.get("password"),
+  }),
+});
+.CE
+
+.H2 Step 2 - Save the token
+.CS
+state.token = response.access_token;
+localStorage.setItem("deskflow_access_token", state.token);
+.CE
+.BUL state.token makes the token available to the current page.
+.BUL localStorage keeps it after a refresh or browser restart.
+.WARN localStorage is simple for this learning project. Production applications must carefully prevent cross-site scripting; secure cookie-based designs are also common.
+
+.H2 Step 3 - Send a protected request
+.CS
+state.user = await apiFetch("/users/me");
+.CE
+.P
+Because a token exists, apiFetch adds this header:
+.CS
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+.CE
+.P
+FastAPI decodes the token, reads the user ID, loads that user from the database, and returns the safe profile.
+
+.H2 Step 4 - Display the user
+.CS
+elements.userName.textContent = state.user.full_name;
+elements.userRole.textContent = state.user.role;
+.CE
+
+.H2 Step 5 - Logout
+.CS
+state.token = null;
+state.user = null;
+localStorage.removeItem("deskflow_access_token");
+.CE
+.P
+Logout removes the local token. Future protected requests no longer contain an Authorization header.
+
+.H1 10. List, filter, and paginate tickets
+.H2 Step 1 - Build query parameters
+.CS
+const query = new URLSearchParams({
+  page: String(state.page),
+  page_size: String(state.pageSize),
+});
+
+if (state.status) query.set("status", state.status);
+if (state.priority) query.set("priority", state.priority);
+.CE
+.P
+Selecting open and high priority creates:
+.CS
+GET /tickets?page=1&page_size=8&status=open&priority=high
+.CE
+
+.H2 Step 2 - Request one page
+.CS
+const ticketPage = await apiFetch(`/tickets?${query}`);
+.CE
+.P
+The response contains items, page, page_size, and total.
+.CS
+{
+  "items": [
+    {
+      "id": 4,
+      "title": "Cannot access student portal",
+      "priority": "high",
+      "status": "open",
+      "owner_id": 1
+    }
+  ],
+  "page": 1,
+  "page_size": 8,
+  "total": 1
+}
+.CE
+
+.H2 Step 3 - Render the ticket rows
+.CS
+elements.ticketTableBody.innerHTML = items
+  .map(ticketRowTemplate)
+  .join("");
+.CE
+.P
+map() turns every ticket object into an HTML row. join("") combines all the rows into one string.
+
+.H2 Step 4 - Calculate the number of pages
+.CS
+const totalPages = Math.max(1, Math.ceil(total / pageSize));
+.CE
+.P
+If 21 tickets are displayed 8 at a time, Math.ceil(21 / 8) returns 3 pages. Previous and Next change state.page and load the dashboard again.
+
+.bp
+.H1 11. Create a ticket
+.P
+The create form collects only title, description, and priority.
+.CS
+const ticket = await apiFetch("/tickets", {
+  method: "POST",
+  body: JSON.stringify({
+    title: formData.get("title").trim(),
+    description: formData.get("description").trim(),
+    priority: formData.get("priority"),
+  }),
+});
+.CE
+.NOTE The frontend does not send owner_id or status. FastAPI obtains the owner from the JWT and starts every new ticket as open. This prevents impersonation and fake status values.
+.P
+After a successful request, the frontend:
+.BUL Clears the form.
+.BUL Closes the dialog.
+.BUL Returns pagination to page 1.
+.BUL Reloads the dashboard.
+.BUL Displays the new ticket number.
+
+.H1 12. Retrieve one ticket
+.P
+Each table button contains a ticket ID:
+.CS
+<button data-ticket-id="4">Open</button>
+.CE
+.P
+JavaScript reads the value and requests:
+.CS
+const ticket = await apiFetch(`/tickets/${ticketId}`);
+.CE
+.P
+It places the response into the details dialog:
+.CS
+elements.detailTitle.textContent = ticket.title;
+elements.detailDescription.textContent = ticket.description;
+elements.detailOwner.textContent = `#${ticket.owner_id}`;
+.CE
+.NOTE textContent displays text without treating it as HTML. This helps prevent script injection. When innerHTML is necessary, escape user-controlled values first.
+
+.H1 13. Handle errors clearly
+.P
+Common status codes in this application are:
+.CS
+201  Created                    Registration or ticket succeeded
+200  OK                         Login or retrieval succeeded
+401  Unauthorized               Token missing, expired, or invalid
+404  Not Found                  Ticket missing or hidden
+409  Conflict                   Email is already registered
+422  Unprocessable Entity       Request failed validation
+.CE
+.P
+FastAPI validation errors are arrays. The helper converts them to readable messages:
+.CS
+if (Array.isArray(payload?.detail)) {
+  return payload.detail
+    .map((issue) => `${issue.loc?.at(-1)}: ${issue.msg}`)
+    .join(". ");
+}
+.CE
+
+.H2 Use try, catch, and finally
+.CS
+try {
+  const response = await apiFetch(...);
+  // handle success
+} catch (error) {
+  showToast(error.message, "error");
+} finally {
+  setButtonBusy(submitButton, false);
+}
+.CE
+.BUL try contains code that may fail.
+.BUL catch displays a helpful error.
+.BUL finally restores the button after success or failure.
+
+.H1 14. Debug requests in Chrome
+.P
+Follow these steps:
+.BUL Open the frontend in Chrome.
+.BUL Press F12 or right-click and choose Inspect.
+.BUL Select the Network tab.
+.BUL Submit the login form.
+.BUL Click the login request.
+.BUL Inspect Headers, Payload, Response, and Status.
+.P
+For successful login, students should find:
+.CS
+Request URL:     http://127.0.0.1:8000/auth/login
+Request method:  POST
+Content-Type:    application/json
+Status:          200 OK
+Payload:         email and password JSON
+Response:        access_token and token_type
+.CE
+
+.bp
+.H1 15. Common problems and solutions
+.H2 Problem: Could not reach the API
+.BUL Confirm Uvicorn is still running.
+.BUL Open http://127.0.0.1:8000/docs.
+.BUL Confirm API_BASE_URL uses port 8000.
+
+.H2 Problem: CORS error
+.BUL Serve the frontend on port 5500 or 8080.
+.BUL Make sure the exact frontend origin is in allow_origins.
+.BUL Restart Uvicorn after changing CORS settings.
+
+.H2 Problem: 401 Unauthorized
+.BUL Log in again and inspect localStorage.
+.BUL Check for Authorization: Bearer ... in Network -> Headers.
+.BUL Confirm the backend secret key did not change after issuing the token.
+
+.H2 Problem: 422 Unprocessable Entity
+.BUL Compare JSON keys with the Pydantic schema.
+.BUL Check the title and description minimum lengths.
+.BUL Use only low, medium, or high for priority.
+
+.H2 Problem: Registration returns 409
+.P
+The email already exists. Use a different email or sign in to the existing account.
+
+.H1 16. Full connection checklist
+.BUL FastAPI starts on port 8000.
+.BUL The frontend starts on port 5500.
+.BUL CORS includes the frontend origin.
+.BUL API_BASE_URL points to port 8000.
+.BUL HTML input names match Pydantic field names.
+.BUL POST requests use JSON.stringify().
+.BUL JSON requests include Content-Type: application/json.
+.BUL Login stores the returned access token.
+.BUL Protected requests include the bearer token.
+.BUL Responses are checked with response.ok.
+.BUL Errors are caught and displayed to the user.
+.BUL Ticket data is rendered safely into the page.
+.BUL Logout removes the stored token.
+
+.H1 17. Beginner vocabulary
+.H2 API
+A defined way for programs to communicate.
+.H2 Endpoint
+An HTTP method and URL that perform one API operation.
+.H2 Request
+Information sent from the frontend to the backend.
+.H2 Response
+The backend's answer, including data and a status code.
+.H2 JSON
+A text format used to exchange structured data.
+.H2 HTTP method
+The operation type, such as GET, POST, PATCH, or DELETE.
+.H2 Header
+Extra request information, such as content type or authentication.
+.H2 JWT
+A signed token used to identify an authenticated user.
+.H2 Bearer token
+A token sent in the Authorization header.
+.H2 CORS
+Browser rules controlling communication between different origins.
+.H2 async and await
+JavaScript syntax for waiting for asynchronous work such as network requests.
+.H2 DOM
+The browser's JavaScript representation of the HTML page.
+
+.bp
+.H1 18. Student exercises
+.BUL Use Network tools to find the login method, URL, request JSON, status, and response JSON.
+.BUL Remove the token in Application -> Local Storage, refresh, and explain what happens.
+.BUL Change pageSize from 8 to 3 and observe pagination.
+.BUL Submit a ticket title shorter than five characters and study validation.
+.BUL Temporarily change the API port to 9999, explain the error, and restore port 8000.
+.BUL Add a high-priority count using /tickets?page=1&page_size=1&priority=high.
+.BUL When PATCH is implemented, design an edit request using apiFetch().
+
+.H1 19. Final mental model
+.CS
+1. LISTEN
+   JavaScript catches a browser event.
+
+2. COLLECT
+   Read and validate values from the HTML form.
+
+3. REQUEST
+   Send method, URL, headers, and JSON with apiFetch().
+
+4. WAIT
+   await the FastAPI response.
+
+5. HANDLE
+   Use successful JSON or display an error.
+
+6. RENDER
+   Update the DOM so the student sees the result.
+.CE
+.NOTE If students remember only one pattern, remember this: Event -> collect data -> apiFetch -> await response -> update DOM -> catch errors.
+
+.H1 Quick classroom demonstration
+.P
+A useful live demonstration is:
+.BUL Register a new account while the Network tab is open.
+.BUL Log in and point out the access_token response.
+.BUL Show the token in localStorage.
+.BUL Create a ticket and inspect the Authorization header.
+.BUL Filter the ticket list and inspect the query string.
+.BUL Stop FastAPI and demonstrate the network error.
+.BUL Restart FastAPI and show the application recovering.
+
+.sp 2v
+.ce 1
+.ft B
+End of guide
+.ft R
+.sp 1v
+.ce 1
+Examples match the Deskflow frontend and FastAPI routes.
